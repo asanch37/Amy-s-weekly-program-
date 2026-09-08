@@ -20,7 +20,7 @@ Works as an installable iPhone app (PWA).
 6. Click **Save**.
 7. Wait 30–60 seconds. Your site will be at:
 
-   `https://YOUR-USERNAME.github.io/REPO-NAME/workout-app.html`
+   `https://YOUR-USERNAME.github.io/REPO-NAME/index.html`
 
    (Example: `https://johndoe.github.io/supercf/workout-app.html`)
 
