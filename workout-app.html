@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SuperCF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1115">
+<meta name="description" content="Progressive superset strength + CrossFit finishers">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<title>SuperCF – Superset × CrossFit</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --card-hover: #22262f;
+    --accent: #ff5a1f;
+    --accent2: #00d4aa;
+    --text: #e8eaed;
+    --muted: #9aa0a6;
+    --border: #2a2e36;
+    --success: #34d399;
+    --warn: #fbbf24;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overscroll-behavior: none;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    padding-bottom: calc(80px + var(--safe-bottom));
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,17,21,0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    padding-top: calc(12px + var(--safe-top));
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .logo {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+  .week-nav {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .week-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .week-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .day-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .day-btn {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .day-btn.active {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #0f1115;
+    font-weight: 600;
+  }
+  .day-btn.rest {
+    opacity: 0.5;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge.strength { background: #3b82f6; color: #fff; }
+  .badge.crossfit { background: var(--accent); color: #fff; }
+  .badge.finisher { background: #8b5cf6; color: #fff; }
+  .badge.warmup { background: #10b981; color: #fff; }
+  .meta {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 14px 0 8px;
+    font-weight: 600;
+  }
+  .exercise {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--accent2);
+  }
+  .exercise.superset {
+    border-left-color: var(--accent);
+  }
+  .exercise.finisher-ex {
+    border-left-color: #8b5cf6;
+  }
+  .ex-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .ex-detail {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 2px;
+  }
+  .superset-label {
+    display: inline-block;
+    background: rgba(255,90,31,0.15);
+    color: var(--accent);
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .notes {
+    background: rgba(0,212,170,0.08);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .notes strong { color: var(--accent2); }
+  .progress-box {
+    background: rgba(255,90,31,0.08);
+    border: 1px solid rgba(255,90,31,0.25);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+  }
+  .progress-box h3 {
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-state h2 { color: var(--text); margin-bottom: 8px; }
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15,17,21,0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    padding-bottom: calc(10px + var(--safe-bottom));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .footer-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    -webkit-appearance: none;
+  }
+  .footer-btn:active { transform: scale(0.97); }
+  .info-panel {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .info-panel.open { display: block; }
+  .info-content {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 500px;
+    margin: 40px auto;
+  }
+  .info-content h2 { margin-bottom: 12px; }
+  .info-content p, .info-content li { font-size: 0.9rem; color: var(--muted); margin-bottom: 8px; }
+  .info-content ul { padding-left: 18px; }
+  .close-info {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    margin-top: 16px;
+    cursor: pointer;
+    width: 100%;
+  }
+  @media (min-width: 600px) {
+    main { padding: 24px; }
+    .card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <div class="logo">⚡ SUPERSET × CROSSFIT</div>
+    <div class="week-nav">
+      <button class="week-btn" onclick="changeWeek(-1)">←</button>
+      <button class="week-btn active" id="weekLabel">Week 1</button>
+      <button class="week-btn" onclick="changeWeek(1)">→</button>
+    </div>
+  </div>
+  <div class="day-nav" id="dayNav"></div>
+</header>
+
+<main id="main"></main>
+
+<footer>
+  <button class="footer-btn" onclick="openInfo()">Program Info</button>
+  <span id="footerStatus">Week 1 · Day 1</span>
+  <button class="footer-btn" onclick="nextDay()">Next Day →</button>
+</footer>
+
+<div class="info-panel" id="infoPanel">
+  <div class="info-content">
+    <h2>Program Overview</h2>
+    <p><strong>Structure (5–6 training days / week):</strong></p>
+    <ul>
+      <li><strong>Day 1</strong> – Legs A (Quad-dominant + posterior)</li>
+      <li><strong>Day 2</strong> – Shoulders</li>
+      <li><strong>Day 3</strong> – Chest &amp; Back</li>
+      <li><strong>Day 4</strong> – Legs B (Posterior + unilateral)</li>
+      <li><strong>Day 5</strong> – Arms</li>
+      <li><strong>Day 6</strong> – Long-form CrossFit / Benchmark (no supersets)</li>
+      <li><strong>Day 7</strong> – Rest or optional light mobility</li>
+    </ul>
+    <p><strong>Progression:</strong> Supersets increase in intensity, volume, or complexity every 2 weeks (4-week cycles). Load should feel challenging in the last 2–3 reps of each set.</p>
+    <p><strong>Finishers:</strong> Most strength days end with a short AMRAP, EMOM, or chipper (8–15 min).</p>
+    <p><strong>Long CrossFit days:</strong> Pure benchmark or mixed-modal workouts (Fran, Helen, Cindy, Murph-style, etc.) once per week.</p>
+    <p><strong>Warm-up:</strong> 5–7 min every session (general + specific).</p>
+    <p>Use the week and day buttons to navigate. Everything is designed to be phone-friendly.</p>
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+    <p><strong>Install on iPhone (make it an app):</strong></p>
+    <ol style="padding-left:18px;color:var(--muted);font-size:0.9rem;">
+      <li>Open this page in <strong>Safari</strong></li>
+      <li>Tap the <strong>Share</strong> button (square with arrow)</li>
+      <li>Scroll and tap <strong>Add to Home Screen</strong></li>
+      <li>Name it “SuperCF” → Add</li>
+    </ol>
+    <p style="font-size:0.85rem;color:var(--muted);">It will open fullscreen like a native app and work offline after the first load.</p>
+    <button class="close-info" onclick="closeInfo()">Close</button>
+  </div>
+</div>
+
+<script>
+// ========== PROGRAM DATA ==========
+const DAYS = [
+  { id: 1, name: "Legs A", short: "Legs A", type: "strength" },
+  { id: 2, name: "Shoulders", short: "Shoulders", type: "strength" },
+  { id: 3, name: "Chest & Back", short: "Chest/Back", type: "strength" },
+  { id: 4, name: "Legs B", short: "Legs B", type: "strength" },
+  { id: 5, name: "Arms", short: "Arms", type: "strength" },
+  { id: 6, name: "CrossFit Day", short: "CF Day", type: "crossfit" },
+  { id: 7, name: "Rest", short: "Rest", type: "rest" }
+];
+
+// Progressive supersets: Weeks 1-2, 3-4, 5-6, 7-8
+// Format: { a: exerciseA, b: exerciseB, sets, repsA, repsB, rest, note }
+function getProgression(week) {
+  if (week <= 2) return 0;
+  if (week <= 4) return 1;
+  if (week <= 6) return 2;
+  return 3;
+}
+
+const PROG_LABELS = [
+  "Weeks 1–2 · Foundation",
+  "Weeks 3–4 · Build",
+  "Weeks 5–6 · Intensify",
+  "Weeks 7–8 · Peak"
+];
+
+// ========== WARM-UPS ==========
+const warmups = {
+  legs: [
+    "2 min easy row / bike / jump rope",
+    "10 bodyweight squats + 10 lunges/side",
+    "10 glute bridges + 10 good mornings",
+    "Hip circles + leg swings (30 sec each)"
+  ],
+  upper: [
+    "2 min easy row / bike / jump rope",
+    "10 arm circles + 10 band pull-aparts",
+    "10 scap push-ups + 10 band face pulls",
+    "Thoracic rotations + shoulder CARs"
+  ],
+  full: [
+    "3 min easy cardio (row/bike/run)",
+    "10 air squats + 10 push-ups + 10 hollow rocks",
+    "10 jumping jacks + 10 good mornings",
+    "Dynamic stretches (hips, shoulders, thoracic)"
+  ]
+};
+
+// ========== SUPERSET PROGRESSIONS ==========
+// Legs A
+const legsA_ss = [
+  // W1-2
+  [
+    { label: "SS1", a: "Back Squat", aDetail: "4×6–8", b: "Romanian Deadlift", bDetail: "4×8–10", rest: "90s" },
+    { label: "SS2", a: "Walking Lunges", aDetail: "3×10/leg", b: "Leg Curl (machine or Nordic)", bDetail: "3×10–12", rest: "75s" },
+    { label: "SS3", a: "Goblet Squat", aDetail: "3×12", b: "Calf Raise", bDetail: "3×15", rest: "60s" }
+  ],
+  // W3-4
+  [
+    { label: "SS1", a: "Back Squat", aDetail: "5×5", b: "Romanian Deadlift", bDetail: "4×8", rest: "90s" },
+    { label: "SS2", a: "Bulgarian Split Squat", aDetail: "3×8/leg", b: "Nordic Curl or Leg Curl", bDetail: "3×8–10", rest: "75s" },
+    { label: "SS3", a: "Front Squat (or Goblet)", aDetail: "3×10", b: "Calf Raise", bDetail: "3×12–15", rest: "60s" }
+  ],
+  // W5-6
+  [
+    { label: "SS1", a: "Back Squat", aDetail: "4×4–6 (heavier)", b: "Romanian Deadlift", bDetail: "4×6–8", rest: "2 min" },
+    { label: "SS2", a: "Bulgarian Split Squat", aDetail: "4×8/leg", b: "Nordic Curl", bDetail: "3×6–8", rest: "90s" },
+    { label: "SS3", a: "Pause Goblet Squat", aDetail: "3×10 (2s pause)", b: "Single-leg Calf Raise", bDetail: "3×12/side", rest: "60s" }
+  ],
+  // W7-8
+  [
+    { label: "SS1", a: "Back Squat", aDetail: "5×3–5", b: "Romanian Deadlift", bDetail: "4×6", rest: "2 min" },
+    { label: "SS2", a: "Bulgarian Split Squat", aDetail: "4×6–8/leg (heavier)", b: "Nordic Curl", bDetail: "4×5–7", rest: "90s" },
+    { label: "SS3", a: "Front Squat", aDetail: "3×8", b: "Calf Raise", bDetail: "3×12–15", rest: "60s" }
+  ]
+];
+
+// Legs B
+const legsB_ss = [
+  [
+    { label: "SS1", a: "Deadlift (Conventional or Trap Bar)", aDetail: "4×5", b: "Box Step-ups", bDetail: "3×8/leg", rest: "2 min" },
+    { label: "SS2", a: "Hip Thrust", aDetail: "3×10", b: "Single-leg RDL", bDetail: "3×8/leg", rest: "75s" },
+    { label: "SS3", a: "Lateral Lunge", aDetail: "3×8/side", b: "Copenhagen Plank", bDetail: "3×20–30s/side", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Deadlift", aDetail: "5×4", b: "Box Step-ups", bDetail: "3×8/leg (weighted)", rest: "2 min" },
+    { label: "SS2", a: "Hip Thrust", aDetail: "4×8", b: "Single-leg RDL", bDetail: "3×8/leg", rest: "75s" },
+    { label: "SS3", a: "Cossack Squat", aDetail: "3×6/side", b: "Copenhagen Plank", bDetail: "3×25–35s/side", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Deadlift", aDetail: "4×3–5", b: "Weighted Step-ups", bDetail: "4×6/leg", rest: "2–2.5 min" },
+    { label: "SS2", a: "Hip Thrust (pause)", aDetail: "4×8", b: "Single-leg RDL", bDetail: "3×6–8/leg", rest: "90s" },
+    { label: "SS3", a: "Cossack Squat", aDetail: "3×8/side", b: "Copenhagen Plank", bDetail: "3×30–40s/side", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Deadlift", aDetail: "5×3", b: "Weighted Step-ups", bDetail: "4×6/leg", rest: "2.5 min" },
+    { label: "SS2", a: "Hip Thrust", aDetail: "4×6–8", b: "Single-leg RDL", bDetail: "4×6/leg", rest: "90s" },
+    { label: "SS3", a: "Cossack Squat", aDetail: "3×8/side", b: "Copenhagen Plank", bDetail: "3×35–45s/side", rest: "60s" }
+  ]
+];
+
+// Shoulders
+const shoulders_ss = [
+  [
+    { label: "SS1", a: "Strict Press (BB or DB)", aDetail: "4×6–8", b: "Pull-ups or Lat Pulldown", bDetail: "4×6–8", rest: "90s" },
+    { label: "SS2", a: "Seated DB Lateral Raise", aDetail: "3×12", b: "Face Pull", bDetail: "3×15", rest: "60s" },
+    { label: "SS3", a: "Arnold Press", aDetail: "3×10", b: "Band Pull-apart", bDetail: "3×15", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Strict Press", aDetail: "5×5", b: "Weighted Pull-ups / Lat PD", bDetail: "4×6–8", rest: "90s" },
+    { label: "SS2", a: "Lateral Raise", aDetail: "4×10–12", b: "Face Pull", bDetail: "3×12–15", rest: "60s" },
+    { label: "SS3", a: "Arnold Press", aDetail: "3×8–10", b: "Rear Delt Fly", bDetail: "3×12", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Strict Press", aDetail: "4×4–6", b: "Weighted Pull-ups", bDetail: "4×5–7", rest: "2 min" },
+    { label: "SS2", a: "Lateral Raise (slow ecc)", aDetail: "4×10", b: "Face Pull", bDetail: "4×12", rest: "60s" },
+    { label: "SS3", a: "Push Press", aDetail: "3×6–8", b: "Rear Delt Fly", bDetail: "3×12", rest: "75s" }
+  ],
+  [
+    { label: "SS1", a: "Strict Press", aDetail: "5×3–5", b: "Weighted Pull-ups", bDetail: "4×5–6", rest: "2 min" },
+    { label: "SS2", a: "Lateral Raise", aDetail: "4×8–10", b: "Face Pull", bDetail: "4×12", rest: "60s" },
+    { label: "SS3", a: "Push Press", aDetail: "4×5–6", b: "Rear Delt Fly", bDetail: "3×12–15", rest: "75s" }
+  ]
+];
+
+// Chest & Back
+const chestBack_ss = [
+  [
+    { label: "SS1", a: "Bench Press (BB or DB)", aDetail: "4×6–8", b: "Bent-over Row", bDetail: "4×8", rest: "90s" },
+    { label: "SS2", a: "Incline DB Press", aDetail: "3×10", b: "Single-arm DB Row", bDetail: "3×10/side", rest: "75s" },
+    { label: "SS3", a: "Push-up (or Dips)", aDetail: "3× max quality", b: "Chest-supported Row or Inverted Row", bDetail: "3×10–12", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Bench Press", aDetail: "5×5", b: "Bent-over Row", bDetail: "4×6–8", rest: "90s" },
+    { label: "SS2", a: "Incline DB Press", aDetail: "4×8", b: "Single-arm DB Row", bDetail: "3×8–10/side", rest: "75s" },
+    { label: "SS3", a: "Dips or Deficit Push-up", aDetail: "3×8–12", b: "Chest-supported Row", bDetail: "3×10", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Bench Press", aDetail: "4×4–6", b: "Bent-over Row", bDetail: "4×6", rest: "2 min" },
+    { label: "SS2", a: "Incline DB Press", aDetail: "4×6–8", b: "Single-arm DB Row", bDetail: "4×8/side", rest: "75s" },
+    { label: "SS3", a: "Weighted Dips or Ring Dips", aDetail: "3×6–10", b: "Meadows Row or Chest-supported", bDetail: "3×8–10", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Bench Press", aDetail: "5×3–5", b: "Bent-over Row", bDetail: "4×5–6", rest: "2 min" },
+    { label: "SS2", a: "Incline DB Press", aDetail: "4×6", b: "Single-arm DB Row", bDetail: "4×6–8/side", rest: "75s" },
+    { label: "SS3", a: "Weighted Dips", aDetail: "3×6–8", b: "Chest-supported Row", bDetail: "3×8", rest: "60s" }
+  ]
+];
+
+// Arms
+const arms_ss = [
+  [
+    { label: "SS1", a: "Barbell or DB Curl", aDetail: "3×10", b: "Skullcrushers or Tricep Pushdown", bDetail: "3×12", rest: "60s" },
+    { label: "SS2", a: "Hammer Curl", aDetail: "3×10", b: "Overhead Tricep Extension", bDetail: "3×12", rest: "60s" },
+    { label: "SS3", a: "Incline Curl", aDetail: "3×12", b: "Diamond Push-up or Close-grip Bench", bDetail: "3×10–12", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Barbell / DB Curl", aDetail: "4×8–10", b: "Skullcrushers", bDetail: "3×10–12", rest: "60s" },
+    { label: "SS2", a: "Hammer Curl", aDetail: "3×10", b: "Overhead Extension", bDetail: "3×10–12", rest: "60s" },
+    { label: "SS3", a: "Incline Curl", aDetail: "3×10–12", b: "Close-grip Bench or Dips", bDetail: "3×8–10", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Barbell Curl", aDetail: "4×6–8", b: "Skullcrushers", bDetail: "4×8–10", rest: "60s" },
+    { label: "SS2", a: "Hammer Curl", aDetail: "3×8–10", b: "Overhead Extension", bDetail: "3×10", rest: "60s" },
+    { label: "SS3", a: "Concentration or Incline Curl", aDetail: "3×10", b: "Close-grip Bench", bDetail: "3×8", rest: "60s" }
+  ],
+  [
+    { label: "SS1", a: "Barbell Curl", aDetail: "4×6", b: "Skullcrushers", bDetail: "4×8", rest: "60s" },
+    { label: "SS2", a: "Hammer Curl", aDetail: "3×8", b: "Overhead Extension", bDetail: "3×8–10", rest: "60s" },
+    { label: "SS3", a: "Incline Curl", aDetail: "3×8–10", b: "Close-grip Bench / Dips", bDetail: "3×6–8", rest: "60s" }
+  ]
+];
+
+// ========== FINISHERS (rotate by week) ==========
+const finishers = {
+  legs: [
+    { title: "AMRAP 10", detail: "10 Goblet Squats + 10 Kettlebell Swings + 10 Box Jumps (or step-ups)" },
+    { title: "EMOM 12", detail: "Min 1: 12 Wall Balls\nMin 2: 10 Burpees\nMin 3: 15 Cal Row/Bike" },
+    { title: "AMRAP 8", detail: "8 Thrusters (light-mod) + 8 Jumping Lunges + 8 Sit-ups" },
+    { title: "Chipper", detail: "21-15-9: Kettlebell Swings + Box Jump Overs + Air Squats" }
+  ],
+  shoulders: [
+    { title: "AMRAP 10", detail: "8 Strict Press (light) + 10 Push-ups + 12 Ring Rows or Inverted Rows" },
+    { title: "EMOM 10", detail: "Min 1: 8–10 DB Push Press\nMin 2: 12 Face Pulls or Band Pull-aparts" },
+    { title: "AMRAP 8", detail: "6 HSPU (or pike push-ups) + 8 Pull-ups + 10 Sit-ups" },
+    { title: "For Time", detail: "21-15-9: Push Press + Pull-ups (scale as needed)" }
+  ],
+  chestBack: [
+    { title: "AMRAP 10", detail: "10 Push-ups + 10 Bent-over Rows (light) + 10 Hollow Rocks" },
+    { title: "EMOM 12", detail: "Min 1: 12 DB Bench or Floor Press\nMin 2: 10 Inverted Rows\nMin 3: 15 Mountain Climbers" },
+    { title: "AMRAP 8", detail: "8 Dips + 8 Pull-ups + 8 Box Jump Overs" },
+    { title: "Chipper", detail: "15-12-9: Burpee + Ring Row + Push-up" }
+  ],
+  arms: [
+    { title: "AMRAP 8", detail: "10 DB Curls + 10 Tricep Pushdowns + 10 Diamond Push-ups" },
+    { title: "EMOM 10", detail: "Min 1: 12 Hammer Curls\nMin 2: 12 Overhead Tricep Ext" },
+    { title: "AMRAP 7", detail: "8 Close-grip Push-ups + 10 Band Curls + 12 Sit-ups" },
+    { title: "For Time", detail: "21-15-9: Curl + Tricep Extension (light DBs)" }
+  ]
+};
+
+// ========== LONG CROSSFIT / BENCHMARK DAYS ==========
+const crossfitDays = [
+  // Week 1
+  {
+    title: "Fran",
+    type: "Benchmark",
+    timeCap: "Time Cap 8–12 min",
+    workout: "21-15-9\nThrusters (95/65 lb or scaled)\nPull-ups",
+    notes: "Classic benchmark. Scale thruster load and pull-ups (banded, jumping, or ring rows) as needed. Record time."
+  },
+  // Week 2
+  {
+    title: "Helen",
+    type: "Benchmark",
+    timeCap: "Time Cap 12–15 min",
+    workout: "3 Rounds for Time\n400 m Run\n21 Kettlebell Swings (53/35)\n12 Pull-ups",
+    notes: "Scale run distance or KB weight. Sub rowing if needed."
+  },
+  // Week 3
+  {
+    title: "Cindy",
+    type: "Benchmark",
+    timeCap: "20 min AMRAP",
+    workout: "AMRAP 20\n5 Pull-ups\n10 Push-ups\n15 Air Squats",
+    notes: "Bodyweight classic. Scale pull-ups and push-ups. Count total rounds + reps."
+  },
+  // Week 4
+  {
+    title: "Diane",
+    type: "Benchmark",
+    timeCap: "Time Cap 8–12 min",
+    workout: "21-15-9\nDeadlifts (225/155 or scaled)\nHandstand Push-ups (or pike / seated DB press)",
+    notes: "Scale DL load heavily if needed. HSPU alternatives: pike push-ups, box HSPU, or strict DB press."
+  },
+  // Week 5
+  {
+    title: "Annie",
+    type: "Benchmark",
+    timeCap: "Time Cap 10–12 min",
+    workout: "50-40-30-20-10\nDouble-unders (or singles ×2)\nSit-ups",
+    notes: "Scale double-unders to singles. Keep sit-ups unbroken if possible."
+  },
+  // Week 6
+  {
+    title: "Grace",
+    type: "Benchmark",
+    timeCap: "Time Cap 5–8 min",
+    workout: "30 Clean & Jerks for Time\n(135/95 lb or scaled)",
+    notes: "Touch-and-go or singles. Choose a load you can move fast but controlled."
+  },
+  // Week 7
+  {
+    title: "Murph (Scaled)",
+    type: "Hero / Long",
+    timeCap: "40–50 min",
+    workout: "1 mile Run\n100 Pull-ups\n200 Push-ups\n300 Air Squats\n1 mile Run\n(Partition as needed: e.g. 20 rounds of 5/10/15)",
+    notes: "Scale volume (e.g. half Murph) or partition. Vest optional. Focus on steady pacing."
+  },
+  // Week 8
+  {
+    title: "Fight Gone Bad",
+    type: "Classic CF",
+    timeCap: "3 rounds + rest",
+    workout: "3 Rounds (1 min each station, 1 min rest between rounds)\nWall Balls\nSumo DL High Pull\nBox Jumps\nPush Press\nRow (calories)\n— Rest 1 min —",
+    notes: "Score = total reps across all stations. Choose moderate loads."
+  }
+];
+
+// Extra CF options for variety if user wants more than 8 weeks
+const extraCF = [
+  {
+    title: "Nancy",
+    type: "Benchmark",
+    timeCap: "Time Cap 15–20 min",
+    workout: "5 Rounds for Time\n400 m Run\n15 Overhead Squats (95/65)",
+    notes: "Scale OHS load or use front squat."
+  },
+  {
+    title: "Kelly",
+    type: "Benchmark",
+    timeCap: "Time Cap 20–25 min",
+    workout: "5 Rounds for Time\n400 m Run\n30 Box Jump\n30 Wall Ball",
+    notes: "Pacing is key. Scale box height and wall ball weight."
+  }
+];
+
+// ========== RENDER ==========
+let currentWeek = 1;
+let currentDay = 1;
+
+function changeWeek(delta) {
+  currentWeek = Math.max(1, Math.min(12, currentWeek + delta));
+  document.getElementById('weekLabel').textContent = `Week ${currentWeek}`;
+  renderDayNav();
+  renderDay();
+}
+
+function selectDay(day) {
+  currentDay = day;
+  renderDayNav();
+  renderDay();
+}
+
+function nextDay() {
+  if (currentDay < 7) {
+    currentDay++;
+  } else {
+    currentDay = 1;
+    currentWeek = Math.min(12, currentWeek + 1);
+    document.getElementById('weekLabel').textContent = `Week ${currentWeek}`;
+  }
+  renderDayNav();
+  renderDay();
+}
+
+function renderDayNav() {
+  const nav = document.getElementById('dayNav');
+  nav.innerHTML = DAYS.map(d => {
+    const active = d.id === currentDay ? 'active' : '';
+    const rest = d.type === 'rest' ? 'rest' : '';
+    return `<button class="day-btn ${active} ${rest}" onclick="selectDay(${d.id})">${d.short}</button>`;
+  }).join('');
+}
+
+function renderWarmup(type) {
+  const list = warmups[type] || warmups.full;
+  return `
+    <div class="section-title">Quick Warm-up (5–7 min)</div>
+    ${list.map(item => `
+      <div class="exercise">
+        <div class="ex-name">${item}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderSupersets(ssArray) {
+  return ssArray.map(ss => `
+    <div class="exercise superset">
+      <div class="superset-label">${ss.label} · Rest ${ss.rest} after pair</div>
+      <div class="ex-name">${ss.a}</div>
+      <div class="ex-detail">${ss.aDetail}</div>
+      <div style="margin: 6px 0; color: var(--muted); font-size: 0.8rem;">↓ superset with ↓</div>
+      <div class="ex-name">${ss.b}</div>
+      <div class="ex-detail">${ss.bDetail}</div>
+    </div>
+  `).join('');
+}
+
+function renderFinisher(category, week) {
+  const idx = (week - 1) % 4;
+  const f = finishers[category][idx];
+  return `
+    <div class="section-title">Finisher</div>
+    <div class="exercise finisher-ex">
+      <div class="ex-name">${f.title}</div>
+      <div class="ex-detail" style="white-space: pre-line;">${f.detail}</div>
+    </div>
+  `;
+}
+
+function renderStrengthDay(title, badge, warmupType, ssData, finisherCat) {
+  const prog = getProgression(currentWeek);
+  const ss = ssData[prog];
+  return `
+    <div class="card">
+      <h2>${title} <span class="badge strength">${badge}</span></h2>
+      <div class="meta">Week ${currentWeek} · ${PROG_LABELS[prog]} · ~45–60 min</div>
+      
+      <div class="progress-box">
+        <h3>Progression Focus</h3>
+        ${prog === 0 ? "Build movement quality and base volume. Choose loads you can complete with 1–2 reps in reserve." :
+          prog === 1 ? "Increase load or add a set. Aim for solid technique under moderate fatigue." :
+          prog === 2 ? "Heavier loads, slower eccentrics or pauses where noted. Push closer to technical failure on last sets." :
+          "Peak intensity. Lower reps, higher load. Keep form strict. Deload next cycle if needed."}
+      </div>
+
+      ${renderWarmup(warmupType)}
+
+      <div class="section-title">Supersets</div>
+      ${renderSupersets(ss)}
+
+      ${renderFinisher(finisherCat, currentWeek)}
+
+      <div class="notes">
+        <strong>Notes:</strong> Rest as prescribed between supersets. On the last set of each exercise, leave 0–2 reps in reserve. Record loads so you can progress next week. Finisher should be hard but not destroy you for the next session.
+      </div>
+    </div>
+  `;
+}
+
+function renderCrossFitDay() {
+  const idx = (currentWeek - 1) % crossfitDays.length;
+  const wod = crossfitDays[idx];
+  return `
+    <div class="card">
+      <h2>${wod.title} <span class="badge crossfit">${wod.type}</span></h2>
+      <div class="meta">Week ${currentWeek} · Long-form CrossFit · No supersets</div>
+
+      ${renderWarmup('full')}
+
+      <div class="section-title">Workout of the Day</div>
+      <div class="exercise finisher-ex">
+        <div class="ex-name">${wod.title}</div>
+        <div class="ex-detail" style="margin-top: 6px;">${wod.timeCap}</div>
+        <div class="ex-detail" style="white-space: pre-line; margin-top: 10px; color: var(--text); font-size: 0.95rem;">${wod.workout}</div>
+      </div>
+
+      <div class="notes">
+        <strong>Scaling & Notes:</strong> ${wod.notes}<br><br>
+        After the WOD: 5–10 min easy cool-down (walk, light row, or stretch). Optional: 2–3 min foam roll major muscle groups.
+      </div>
+    </div>
+  `;
+}
+
+function renderRestDay() {
+  return `
+    <div class="card">
+      <h2>Rest Day <span class="badge" style="background:#6b7280;color:#fff;">Recovery</span></h2>
+      <div class="meta">Week ${currentWeek}</div>
+      <div class="empty-state">
+        <h2>Active Recovery or Full Rest</h2>
+        <p style="margin-top: 12px;">Options:</p>
+        <ul style="text-align: left; display: inline-block; margin-top: 8px; color: var(--muted);">
+          <li>Complete rest</li>
+          <li>20–30 min easy walk or cycle</li>
+          <li>Mobility flow (hips, thoracic, shoulders)</li>
+          <li>Light yoga or foam rolling</li>
+        </ul>
+        <p style="margin-top: 16px;">Prioritize sleep and protein. Next training day is Legs A.</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderDay() {
+  const main = document.getElementById('main');
+  document.getElementById('footerStatus').textContent = `Week ${currentWeek} · ${DAYS[currentDay-1].name}`;
+
+  let html = '';
+  switch (currentDay) {
+    case 1:
+      html = renderStrengthDay("Legs A – Quad + Posterior", "Strength", "legs", legsA_ss, "legs");
+      break;
+    case 2:
+      html = renderStrengthDay("Shoulders", "Strength", "upper", shoulders_ss, "shoulders");
+      break;
+    case 3:
+      html = renderStrengthDay("Chest & Back", "Strength", "upper", chestBack_ss, "chestBack");
+      break;
+    case 4:
+      html = renderStrengthDay("Legs B – Posterior + Unilateral", "Strength", "legs", legsB_ss, "legs");
+      break;
+    case 5:
+      html = renderStrengthDay("Arms", "Strength", "upper", arms_ss, "arms");
+      break;
+    case 6:
+      html = renderCrossFitDay();
+      break;
+    case 7:
+      html = renderRestDay();
+      break;
+  }
+  main.innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+function openInfo() {
+  document.getElementById('infoPanel').classList.add('open');
+}
+function closeInfo() {
+  document.getElementById('infoPanel').classList.remove('open');
+}
+
+// Init
+renderDayNav();
+renderDay();
+
+// Register service worker for offline / installable app
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SuperCF SW registered', reg.scope))
+      .catch(err => console.log('SW registration failed', err));
+  });
+}
+
+// Prevent iOS rubber-band scroll on body when possible
+document.addEventListener('touchmove', function(e) {
+  if (e.target.closest('.info-panel, .day-nav, main')) return;
+}, { passive: true });
+</script>
+</body>
+</html>
